@@ -11,21 +11,16 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors()); // Allow all origins
+app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Explicitly handle CORS headers for all routes
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Allow all origins
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allow methods
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow headers
-  next();
-});
-
 // Routes
 app.use('/api/articles', articlesRoutes);
+
+// Error Handling Middleware
+app.use(errorHandler);
 
 // Email Endpoint
 app.post('/send-email', async (req, res) => {
@@ -34,14 +29,14 @@ app.post('/send-email', async (req, res) => {
 
     // Validate inputs
     if (!name || !email || !message) {
-      console.log('Validation Error: Missing Fields');
+      console.log("Validation Error: Missing Fields");
       return res.status(400).send('All fields are required.');
     }
 
     // Email regex validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.log('Validation Error: Invalid Email');
+      console.log("Validation Error: Invalid Email");
       return res.status(400).send('Invalid email format.');
     }
 
@@ -70,17 +65,6 @@ app.post('/send-email', async (req, res) => {
     res.status(500).send('Failed to send the email. Please try again later.');
   }
 });
-
-// Explicitly handle preflight OPTIONS requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(200);
-});
-
-// Error Handling Middleware
-app.use(errorHandler);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
